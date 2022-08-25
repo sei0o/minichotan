@@ -15,14 +15,36 @@
 
 <h1>minichotan</h1>
 
-<ul>
+<nav>
+  <a href="/about">about</a>
+</nav>
+
+<main>
   {#each posts as post}
-    <li class="post">{process(post.text)}</li>
+    <div class="post">{process(post.text)}</div>
   {/each}
-</ul>
+</main>
 
 <style>
+body {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+nav {
+  margin-bottom: 0.5rem;
+}
+
+main {
+  padding: 0;
+}
+
 .post {
   white-space: pre-line;
+  width: 100%;
+  border-top: 1px solid #ccc;
+  padding: 0.2rem 0;
+  min-height: 1rem;
 }
 </style>
