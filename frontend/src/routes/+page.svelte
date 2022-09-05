@@ -1,5 +1,6 @@
 <script type="ts">
   import { onMount } from "svelte";
+  import Post from './Post.svelte';
 
   let posts = {};
   let userIds = [];
@@ -18,24 +19,24 @@
     currentUserId = userId;
   }
 
-  function process(text: string): string {
-    return text.replace(/https:\/\/t.co\/\w+(\s|$)/g, "");
-  }
 </script>
 
-<h1>minichotan</h1>
-
-<nav>
-  <a href="/about">about</a>
-  {#each userIds as id}
-    <a href="#" on:click={setUser(id)}>{id}</a>
-  {/each}
-</nav>
+<header>
+  <nav>
+    <ul>
+      <li>minichotan</li>
+      {#each userIds as id}
+        <li><a href="#" on:click={setUser(id)}>{id}</a></li>
+      {/each}
+      <li><a href="/about">about</a></li>
+    </ul>
+  </nav>
+</header>
 
 <main>
   {#if currentUserId}
     {#each posts[currentUserId] as post}
-      <div class="post">{process(post.text)}</div>
+      <Post {post} />
     {/each}
   {/if}
 </main>
@@ -47,19 +48,35 @@ body {
   border: none;
 }
 
+header {
+}
+
 nav {
   margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: #333;
+}
+
+nav ul {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+nav li {
+  display: inline;
+}
+
+nav a {
+  text-decoration: none;
+}
+
+nav a:hover {
+  text-decoration: underline;
 }
 
 main {
   padding: 0;
 }
 
-.post {
-  white-space: pre-line;
-  width: 100%;
-  border-top: 1px solid #ccc;
-  padding: 0.2rem 0;
-  min-height: 1rem;
-}
 </style>
