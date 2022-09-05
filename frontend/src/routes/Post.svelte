@@ -1,12 +1,20 @@
 <script type='ts'>
   export let post;
 
-  let processedText = post.text.replace(/https:\/\/t.co\/\w+(\s|$)/g, "");
+  let opened = false;
+  let processedText;
+  $: processedText = post.text.replace(/https:\/\/t.co\/\w+(\s|$)/g, "");
+
+  function toggle() {
+    opened = !opened;
+  }
 </script>
 
-<div class="post">
+<div class="post" on:click={toggle}>
   <span class="text">{processedText}</span>
-  <span class="debug">{JSON.stringify(post)}</span>
+  <div class="detail" class:open={opened}>
+    <span class="debug">{JSON.stringify(post)}</span>
+  </div>
 </div>
 
 <style>
@@ -21,5 +29,13 @@
   .debug {
     font-size: 0.6rem;
     color: #666;
+  }
+
+  .detail {
+    display: none;
+  }
+
+  .detail.open {
+    display: block;
   }
 </style>

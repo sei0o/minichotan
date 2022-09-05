@@ -18,20 +18,23 @@
 
   // api_paramsを含まないと肩が一意に定まらない
   async function setUser(userId: string) {
+    currentUserId = userId;
+
     const resp = await fetch(`http://localhost:3939/timeline?user_id=${userId}`);
     posts[userId] = (await resp.json()).body;
-
-    currentUserId = userId;
+    console.log(posts);
+    posts = posts;
   }
 
   async function setUserInfo(userId: string) {
     const resp = await fetch(`http://localhost:3939/userinfo?user_id=${userId}`);
     users[userId] = (await resp.json()).body.data;
+    users = users;
+    userIds = userIds;
   }
 
   function getUsername(userId: string) {
-    console.log(userId, users[userId]);
-    return '@' + (users[userId] ? users[userId].username : userId);
+    return (users[userId] ? '@' + users[userId].username : userId);
   }
 </script>
 
@@ -39,18 +42,16 @@
   <nav>
     <ul>
       <li>minichotan</li>
-      {#key users}
         {#each userIds as id}
           <li><a href="#" on:click={setUser(id)}>{getUsername(id)}</a></li>
         {/each}
-      {/key}
       <li><a href="/about">about</a></li>
     </ul>
   </nav>
 </header>
 
 <main>
-  {#if currentUserId}
+  {#if currentUserId && posts[currentUserId]}
     {#each posts[currentUserId] as post}
       <Post {post} />
     {/each}
