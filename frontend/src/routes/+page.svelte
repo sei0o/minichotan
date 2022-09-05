@@ -1,12 +1,22 @@
 <script type="ts">
   import { onMount } from "svelte";
 
-  let posts = [];
+  let posts = {};
+  let userIds = [];
+  let currentUserId = null;
 
   onMount(async () => {
-    const resp = await fetch("http://localhost:3939/timeline");
-    posts = (await resp.json()).body;
+    const acctResp = await fetch("http://localhost:3939/accounts");
+    userIds = (await acctResp.json()).user_ids;
   });
+
+  // api_paramsを含まないと肩が一意に定まらない
+  async function setUser(userId: string) {
+    const resp = await fetch(`http://localhost:3939/timeline?user_id=${userId}&api_params={}`);
+    posts[userId] = (await resp.json()).body;
+
+    currentUserId = userId;
+  }
 
   function process(text: string): string {
     return text.replace(/https:\/\/t.co\/\w+(\s|$)/g, "");
@@ -17,12 +27,17 @@
 
 <nav>
   <a href="/about">about</a>
+  {#each userIds as id}
+    <a href="#" on:click={setUser(id)}>{id}</a>
+  {/each}
 </nav>
 
 <main>
-  {#each posts as post}
-    <div class="post">{process(post.text)}</div>
-  {/each}
+  {#if currentUserId}
+    {#each posts[currentUserId] as post}
+      <div class="post">{process(post.text)}</div>
+    {/each}
+  {/if}
 </main>
 
 <style>
