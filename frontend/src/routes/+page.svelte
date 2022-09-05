@@ -4,30 +4,46 @@
 
   let posts = {};
   let userIds = [];
+  let users = {};
   let currentUserId = null;
 
   onMount(async () => {
     const acctResp = await fetch("http://localhost:3939/accounts");
     userIds = (await acctResp.json()).user_ids;
+
+    for (const id of userIds) {
+      setUserInfo(id);
+    }
   });
 
   // api_paramsを含まないと肩が一意に定まらない
   async function setUser(userId: string) {
-    const resp = await fetch(`http://localhost:3939/timeline?user_id=${userId}&api_params={}`);
+    const resp = await fetch(`http://localhost:3939/timeline?user_id=${userId}`);
     posts[userId] = (await resp.json()).body;
 
     currentUserId = userId;
   }
 
+  async function setUserInfo(userId: string) {
+    const resp = await fetch(`http://localhost:3939/userinfo?user_id=${userId}`);
+    users[userId] = (await resp.json()).body.data;
+  }
+
+  function getUsername(userId: string) {
+    console.log(userId, users[userId]);
+    return '@' + (users[userId] ? users[userId].username : userId);
+  }
 </script>
 
 <header>
   <nav>
     <ul>
       <li>minichotan</li>
-      {#each userIds as id}
-        <li><a href="#" on:click={setUser(id)}>{id}</a></li>
-      {/each}
+      {#key users}
+        {#each userIds as id}
+          <li><a href="#" on:click={setUser(id)}>{getUsername(id)}</a></li>
+        {/each}
+      {/key}
       <li><a href="/about">about</a></li>
     </ul>
   </nav>
@@ -65,6 +81,7 @@ nav ul {
 
 nav li {
   display: inline;
+  margin: 0 0.5rem;
 }
 
 nav a {

@@ -188,6 +188,48 @@ async fn accounts() -> Result<impl IntoResponse, AppError> {
     Ok((StatusCode::OK, Json(res)))
 }
 
+async fn userinfo(
+    Query(params): Query<HashMap<String, String>>,
+) -> Result<impl IntoResponse, AppError> {
+    info!("Received request for timeline: {params:?}");
+    let (mut stream, id) = prepare_rpc()?;
+    let user_id = params.get("user_id").ok_or(AppError::Params)?;
+
+    let payload = json!({
+        "jsonrpc": JSONRPC_VERSION,
+        "id": id,
+        "params": {"user_id": user_id, "api_params": {}, "endpoint": "users/:id", "http_method": "GET"},
+        "method": "v0.plain",
+    })
+    .to_string();
+    debug!("Sending request: {}", payload);
+
+    let mut resp = String::new();
+    stream.write_all(payload.as_bytes())?;
+    stream.write_all(b"\n")?;
+    stream.flush()?;
+    stream.read_to_string(&mut resp)?;
+    debug!("Received response: {}", resp);
+
+    let resp: RpcResponse =
+        serde_json::from_str(&resp).map_err(AppError::BackendInvalidResponse)?;
+    let res: RpcResponseResult = match resp.object {
+        RpcObject::Result(result) => result,
+        RpcObject::Error(err) => {
+            error!("{:?}", err);
+            Err(AppError::OtherInternal)?
+        }
+    };
+    Ok((
+        StatusCode::OK,
+        [
+            (header::CACHE_CONTROL, "no-cache"),
+            (header::CONTENT_TYPE, "application/json"),
+        ],
+        Json(res),
+    ))
+}
+
 async fn get_user() {
     todo!()
 }
@@ -214,6 +256,7 @@ async fn main() -> Result<(), AppError> {
     let app = Router::new()
         .route("/timeline", get(timeline))
         .route("/accounts", get(accounts))
+        .route("/userinfo", get(userinfo))
         .route("/user/", get(get_user))
         .route("/post/", get(get_post))
         .layer(
