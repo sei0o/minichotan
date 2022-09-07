@@ -134,7 +134,12 @@ async fn timeline(
     let payload = json!({
         "jsonrpc": JSONRPC_VERSION,
         "id": id,
-        "params": {"user_id": user_id, "api_params": {}},
+        "params": {
+            "user_id": user_id,
+            "api_params": {
+                "expansions": "author_id",
+            },
+        },
         "method": "v0.home_timeline",
     })
     .to_string();

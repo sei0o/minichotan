@@ -8,6 +8,7 @@
   let posts = {};
   let userIds = [];
   let users = {};
+  let includedUsers = {};
   let currentUserId = null;
 
   onMount(async () => {
@@ -24,8 +25,14 @@
     currentUserId = userId;
 
     const resp = await fetch(`http://localhost:3939/timeline?user_id=${userId}`);
-    posts[userId] = (await resp.json()).body;
+    const json = (await resp.json()).body;
+    posts[userId] = json.data;
+    includedUsers = json.includes.users.reduce((ob, u) => {
+      ob[u.id] = u;
+      return ob;
+    }, includedUsers);
     console.log(posts);
+    console.log(includedUsers);
     posts = posts;
   }
 
@@ -56,14 +63,14 @@
 <main>
   {#if currentUserId && posts[currentUserId]}
     {#each posts[currentUserId] as post}
-      <Post {post} />
+      <Post {post} users={includedUsers} />
     {/each}
   {/if}
 </main>
 
 <style>
 body {
-  margin: 0;
+  margin: 0 !important;
   padding: 0;
   border: none;
 }
