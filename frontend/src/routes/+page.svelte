@@ -1,3 +1,6 @@
+<script context="module">
+ export const ssr = false;
+</script>
 <script type="ts">
   import { onMount } from "svelte";
   import Post from './Post.svelte';
