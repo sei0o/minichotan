@@ -1,6 +1,9 @@
 use axum::extract::Query;
 use axum::response::{IntoResponse, Response};
-use axum::{routing::get, Json, Router};
+use axum::{
+    routing::{get, get_service},
+    Json, Router,
+};
 use http::{header, Method, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -9,7 +12,10 @@ use std::io::{Read, Write};
 use std::{env, net::SocketAddr, os::unix::net::UnixStream, path::PathBuf};
 use thiserror::Error;
 use tower::ServiceBuilder;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    services::ServeDir,
+};
 use tracing::{debug, error, info};
 
 const JSONRPC_VERSION: &str = "2.0";
@@ -252,8 +258,18 @@ async fn main() -> Result<(), AppError> {
     tracing_subscriber::fmt::init();
 
     let config = Config::new()?;
+    let frontend_service = get_service(
+        ServeDir::new("static").append_index_html_on_directories(true),
+    )
+    .handle_error(|err: std::io::Error| async move {
+        (
+            StatusCode::NOT_FOUND,
+            format!("not found in frontend dir: {}", err),
+        )
+    });
 
     let app = Router::new()
+        .fallback(frontend_service)
         .route("/timeline", get(timeline))
         .route("/accounts", get(accounts))
         .route("/userinfo", get(userinfo))
