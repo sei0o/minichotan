@@ -8,7 +8,6 @@
     processedText = post.text
       .replace(/https:\/\/t.co\/\w+(\s|$)/g, "")
       .replace(/^RT @([^:])+: /g, "");
-    processedText = decodeURIComponent(processedText);
   }
 
   let author = users[post.author_id];
