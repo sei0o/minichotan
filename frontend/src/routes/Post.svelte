@@ -13,9 +13,12 @@
   $: fullRawText = retweet ? retweetSrc.text : post.text;
   let text = "";
   $: {
-    text = fullRawText
+    const t = fullRawText
       .replace(/https:\/\/t.co\/\w+(\s|$)/g, "")
-      .replace(/^RT @([^:])+: /g, "");
+      .replace(/^RT @([^:])+: /g, "")
+      .replace(/\n+$/g, "");
+    const doc = new DOMParser().parseFromString(t, "text/html");
+    text = doc.documentElement.textContent;
   }
   let author = users[post.author_id];
   let links = [];
@@ -44,10 +47,18 @@
 <div class="post" on:click={toggle}>
   <span class="text">
     {text}<br>
-    {#each links as link}
-      <a class="link" href={link.url}>{link.title || link.url}</a>
-    {/each}
   </span>
+  <div class="links">
+    {#each links as link}
+      <a class="link" href={link.url}>
+        {#if link.media_key}
+          [Media]
+        {:else}
+          {link.title || link.display_url}
+        {/if}
+      </a>
+    {/each}
+  </div>
   <div class="detail" class:open={opened}>
     {#if author}
       {#if retweet}
@@ -92,5 +103,6 @@
   .link {
     color: #444;
     margin-right: 0.3rem;
+    font-size: 0.8rem;
   }
 </style>
