@@ -10,6 +10,7 @@
       .replace(/^RT @([^:])+: /g, "");
   }
 
+  let json = JSON.stringify(post, null, "  ");
   let author = users[post.author_id];
 
   function toggle() {
@@ -23,7 +24,7 @@
     {#if author}
       <span class="author">@{author.username}</span>
     {/if}
-    <span class="debug">{JSON.stringify(post)}</span>
+    <span class="debug">{json}</span>
   </div>
 </div>
 
@@ -39,7 +40,9 @@
   .debug {
     display: block;
     font-size: 0.6rem;
+    font-family: monospace;
     color: #666;
+    white-space: pre-wrap;
   }
 
   .detail {
