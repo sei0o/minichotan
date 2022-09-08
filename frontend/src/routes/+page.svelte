@@ -9,6 +9,7 @@
   let userIds = [];
   let users = {};
   let includedUsers = {};
+  let includedTweets = {};
   let currentUserId = null;
 
   onMount(async () => {
@@ -31,8 +32,11 @@
       ob[u.id] = u;
       return ob;
     }, includedUsers);
-    console.log(posts);
-    console.log(includedUsers);
+    includedTweets = json.includes.tweets.reduce((ob, u) => {
+      ob[u.id] = u;
+      return ob;
+    }, includedTweets);
+    console.log(json);
     posts = posts;
   }
 
@@ -63,7 +67,7 @@
 <main>
   {#if currentUserId && posts[currentUserId]}
     {#each posts[currentUserId] as post}
-      <Post {post} users={includedUsers} />
+      <Post {post} users={includedUsers} refTweets={includedTweets} />
     {/each}
   {/if}
 </main>

@@ -1,17 +1,40 @@
 <script type='ts'>
+  // tweet itself
   export let post;
+  // users[user_id] = user information;
   export let users = {};
+  // refTweets[tweet_id] = tweet content;
+  export let refTweets = {};
+
+  let json = JSON.stringify(post, null, "  ");
 
   let opened = false;
-  let processedText;
+  let fullRawText = post.text;
+  $: fullRawText = retweet ? retweetSrc.text : post.text;
+  let text = "";
   $: {
-    processedText = post.text
+    text = fullRawText
       .replace(/https:\/\/t.co\/\w+(\s|$)/g, "")
       .replace(/^RT @([^:])+: /g, "");
   }
-
-  let json = JSON.stringify(post, null, "  ");
   let author = users[post.author_id];
+  let links = [];
+  if (post.entities && post.entities.urls) {
+    links = post.entities.urls;
+  }
+
+  let retweet, retweetSrc, retweetSrcAuthor;
+  let quote = false;
+  $: retweet = retweetSrc !== undefined;
+  if (post.referenced_tweets) {
+    for (const ref of post.referenced_tweets) {
+      if (ref.type === "retweeted") {
+        retweetSrc = refTweets[ref.id];
+        retweetSrcAuthor = users[retweetSrc.author_id];
+        break;
+      }
+    }
+  }
 
   function toggle() {
     opened = !opened;
@@ -19,10 +42,19 @@
 </script>
 
 <div class="post" on:click={toggle}>
-  <span class="text">{processedText}</span>
+  <span class="text">
+    {text}<br>
+    {#each links as link}
+      <a class="link" href={link.url}>{link.title || link.url}</a>
+    {/each}
+  </span>
   <div class="detail" class:open={opened}>
     {#if author}
-      <span class="author">@{author.username}</span>
+      {#if retweet}
+        <span class="author">@{retweetSrcAuthor.username} (@{author.username} retweeted)</span>
+      {:else}
+        <span class="author">@{author.username}</span>
+      {/if}
     {/if}
     <span class="debug">{json}</span>
   </div>
@@ -55,5 +87,10 @@
 
   .author {
     font-size: 0.8rem;
+  }
+
+  .link {
+    color: #444;
+    margin-right: 0.3rem;
   }
 </style>

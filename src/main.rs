@@ -137,7 +137,7 @@ async fn timeline(
         "params": {
             "user_id": user_id,
             "api_params": {
-                "expansions": "author_id",
+                "expansions": "author_id,referenced_tweets.id,referenced_tweets.id.author_id",
             },
         },
         "method": "v0.home_timeline",
