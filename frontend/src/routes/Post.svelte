@@ -27,14 +27,20 @@
   }
 
   let retweet, retweetSrc, retweetSrcAuthor;
-  let quote = false;
+  let quote, quoteSrc, quoteSrcAuthor;
   $: retweet = retweetSrc !== undefined;
+  $: quote = quoteSrc !== undefined;
   if (post.referenced_tweets) {
     for (const ref of post.referenced_tweets) {
       if (ref.type === "retweeted") {
         retweetSrc = refTweets[ref.id];
         retweetSrcAuthor = users[retweetSrc.author_id];
         break;
+      }
+
+      if (ref.type === "quoted") {
+        quoteSrc = refTweets[ref.id];
+        quoteSrcAuthor = users[quoteSrc.author_id];
       }
     }
   }
@@ -46,6 +52,9 @@
 
 <div class="post" on:click={toggle}>
   <span class="text">
+    {#if quote}
+      {quoteSrc.text}
+    {/if}
     {text}<br>
   </span>
   <div class="links">
