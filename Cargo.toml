@@ -22,3 +22,6 @@ tower-http = { version = "0.3.4", features = ["cors", "fs"] }
 http = "0.2.8"
 uuid = { version = "~1.1.2", features = ["v4"] }
 colored_json = "~2.1.0"
+sqlx = { version = "0.6", features = [ "runtime-tokio-rustls", "postgres", "json" ]}
+axum-sessions = "0.3.1"
+async-sqlx-session = { version = "0.4.0", default-features = false, features = ["rustls", "pg"] }
