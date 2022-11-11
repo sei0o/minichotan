@@ -120,11 +120,11 @@ async fn timeline(
     Ok(ok_nocache_json(res))
 }
 
-async fn accounts(session: ReadableSession) -> Result<impl IntoResponse, AppError> {
+async fn accounts(mut session: WritableSession) -> Result<impl IntoResponse, AppError> {
     info!("listing account for: session id = {}", session.id());
     let (mut stream, id) = prepare_rpc()?;
 
-    let accs = session.get::<AccountList>("accounts").unwrap_or_default();
+    let mut accs = session.get::<AccountList>("accounts").unwrap_or_default();
 
     if !accs.signed_in() {
         // return empty list
@@ -160,6 +160,15 @@ async fn accounts(session: ReadableSession) -> Result<impl IntoResponse, AppErro
             owner,
             session_keys,
         } => {
+            // update accounts saved in session
+            // (or call v0.account.list?)
+            accs.rpc_session_keys = session_keys.clone();
+            accs.owner_id.replace(owner.clone());
+            session
+                .insert("accounts", accs)
+                .map_err(|err| AppError::BackendInvalidResponse(anyhow!(err)))?;
+
+            // construct response
             let user_ids: Vec<String> = session_keys.keys().cloned().collect();
             json!({
                 "owner_id": owner,
@@ -177,16 +186,27 @@ async fn accounts(session: ReadableSession) -> Result<impl IntoResponse, AppErro
 }
 
 async fn userinfo(
+    session: ReadableSession,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<impl IntoResponse, AppError> {
-    info!("Received request for timeline: {params:?}");
+    info!("Received request for userinfo: {params:?}");
     let (mut stream, id) = prepare_rpc()?;
     let user_id = params.get("user_id").ok_or(AppError::Params)?;
+
+    let acct: AccountList = session.get("accounts").unwrap_or_default();
+    let key = acct
+        .key_for(user_id)
+        .ok_or(AppError::SessionNotFound(user_id.into()))?;
 
     let payload = json!({
         "jsonrpc": JSONRPC_VERSION,
         "id": id,
-        "params": {"user_id": user_id, "api_params": {}, "endpoint": "users/:id", "http_method": "GET"},
+        "params": {
+            "session_key": key,
+            "api_params": {},
+            "endpoint": "users/:id",
+            "http_method": "GET"
+        },
         "method": "v0.plain",
     })
     .to_string();

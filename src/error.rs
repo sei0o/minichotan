@@ -26,6 +26,8 @@ pub enum AppError {
     RpcResponse(RpcResponseError),
     #[error("database error: {0}")]
     Database(anyhow::Error),
+    #[error("session key not found: {0}")]
+    SessionNotFound(String),
     #[error("other error")]
     OtherInternal,
 }
