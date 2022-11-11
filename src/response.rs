@@ -27,14 +27,15 @@ pub enum RpcResponseResult {
         version: String,
     },
     AccountList {
-        user_ids: Vec<String>,
-        // session_keys: HashMap<String, String>,
+        owner: String,
+        session_keys: HashMap<String, String>,
     },
     AccountAdd {
         user_id: String,
         session_key: String,
     },
 }
+// 他のstructに切り出す？backendみるか〜
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RpcResponsePlainMeta {

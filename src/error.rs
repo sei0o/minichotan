@@ -4,6 +4,8 @@ use axum::response::{IntoResponse, Response};
 use http::StatusCode;
 use thiserror::Error;
 
+use crate::response::{RpcResponse, RpcResponseError};
+
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error("failed to load an environmental variable: {0}")]
@@ -20,6 +22,8 @@ pub enum AppError {
     Params,
     #[error("invalid response from backend: {0}")]
     BackendInvalidResponse(anyhow::Error),
+    #[error("rpc response error: {0:?}")]
+    RpcResponse(RpcResponseError),
     #[error("database error: {0}")]
     Database(anyhow::Error),
     #[error("other error")]

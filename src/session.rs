@@ -18,4 +18,8 @@ impl AccountList {
     pub fn owner_key(&self) -> Option<String> {
         self.owner_id.as_ref().map(|id| self.key_for(id).unwrap())
     }
+
+    pub fn signed_in(&self) -> bool {
+        self.owner_id.is_some()
+    }
 }

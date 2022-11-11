@@ -21,6 +21,7 @@ impl RpcRequest {
         stream.write_all(self.payload.as_bytes())?;
         stream.write_all(b"\n")?;
         stream.flush()?;
+        // TODO: this blocks; use async?
         stream.read_to_string(&mut resp)?;
         debug!("Received response: {}", resp);
 

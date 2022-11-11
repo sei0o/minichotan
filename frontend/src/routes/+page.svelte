@@ -6,26 +6,41 @@
   import Post from './Post.svelte';
 
   let posts = {};
-  let userIds = [];
+  let ownerId: string;
+  let userIds: string[] = [];
   let users = {};
   let includedUsers = {};
   let includedTweets = {};
-  let currentUserId = null;
+  let currentUserId: string|null = null;
 
   onMount(async () => {
-    const acctResp = await fetch("http://localhost:3939/accounts");
-    userIds = (await acctResp.json()).user_ids;
+    await listUser();
+  });
+
+  async function listUser() {
+    const acctResp = await fetch("//localhost/api/accounts");
+    const json = await acctResp.json();
+    ownerId = json.owner_id;
+    userIds = json.user_ids;
 
     for (const id of userIds) {
       setUserInfo(id);
     }
-  });
+  }
+
+  async function addUser() {
+    const resp = await fetch(`//localhost/api/accounts/add`);
+    const json = (await resp.json()).body;
+    console.log(json);
+
+    await listUser();
+  }
 
   // api_paramsを含まないと肩が一意に定まらない
   async function setUser(userId: string) {
     currentUserId = userId;
 
-    const resp = await fetch(`http://localhost:3939/timeline?user_id=${userId}`);
+    const resp = await fetch(`//localhost/api/timeline?user_id=${userId}`);
     const json = (await resp.json()).body;
     posts[userId] = json.data;
     includedUsers = json.includes.users.reduce((ob, u) => {
@@ -41,7 +56,7 @@
   }
 
   async function setUserInfo(userId: string) {
-    const resp = await fetch(`http://localhost:3939/userinfo?user_id=${userId}`);
+    const resp = await fetch(`//localhost/api/userinfo?user_id=${userId}`);
     users[userId] = (await resp.json()).body.data;
     users = users;
     userIds = userIds;
@@ -59,6 +74,7 @@
         {#each userIds as id}
           <li><a href="#" on:click={setUser(id)}>{getUsername(id)}</a></li>
         {/each}
+      <li><a href="#" on:click={addUser}>Add Account</a></li>
       <li><a href="/about">about</a></li>
     </ul>
   </nav>
