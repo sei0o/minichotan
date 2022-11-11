@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::post::Post;
@@ -26,9 +28,11 @@ pub enum RpcResponseResult {
     },
     AccountList {
         user_ids: Vec<String>,
+        // session_keys: HashMap<String, String>,
     },
     AccountAdd {
         user_id: String,
+        session_key: String,
     },
 }
 

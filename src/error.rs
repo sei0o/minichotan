@@ -19,7 +19,7 @@ pub enum AppError {
     #[error("invalid parameters")]
     Params,
     #[error("invalid response from backend: {0}")]
-    BackendInvalidResponse(serde_json::Error),
+    BackendInvalidResponse(anyhow::Error),
     #[error("database error: {0}")]
     Database(anyhow::Error),
     #[error("other error")]

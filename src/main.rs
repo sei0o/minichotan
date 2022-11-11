@@ -1,13 +1,14 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use async_sqlx_session::PostgresSessionStore;
 use axum::extract::Query;
 use axum::response::IntoResponse;
+use axum::routing::post;
 use axum::Extension;
 use axum::{
     routing::{get, get_service},
     Json, Router,
 };
-use axum_sessions::extractors::ReadableSession;
+use axum_sessions::extractors::{ReadableSession, WritableSession};
 use axum_sessions::SessionLayer;
 use config::Config;
 use http::{header, Method, StatusCode};
@@ -25,14 +26,76 @@ use tracing::{debug, error, info};
 use crate::error::AppError;
 use crate::request::RpcRequest;
 use crate::response::{RpcObject, RpcResponseResult};
+use crate::session::AccountList;
 
 mod config;
 mod error;
 mod post;
 mod request;
 mod response;
+mod session;
 
 const JSONRPC_VERSION: &str = "2.0";
+
+async fn add_account(mut session: WritableSession) -> Result<impl IntoResponse, AppError> {
+    debug!("adding account to: {}", session.id());
+    let (mut stream, id) = prepare_rpc()?;
+
+    let mut accs = session.get::<AccountList>("accounts").unwrap_or_default();
+
+    let payload = json!({
+        "jsonrpc": JSONRPC_VERSION,
+        "id": id,
+        "params": {
+            "session_key": accs.owner_key(),
+        },
+        "method": "v0.account.add"
+    })
+    .to_string();
+
+    let request = RpcRequest::new(payload);
+    let resp = request.send(&mut stream)?;
+    let res: RpcResponseResult = match resp.object {
+        RpcObject::Result(result) => result,
+        RpcObject::Error(err) => {
+            error!("{:?}", err);
+            Err(AppError::OtherInternal)?
+        }
+    };
+
+    let (user_id, key) = match res {
+        RpcResponseResult::AccountAdd {
+            user_id,
+            session_key,
+        } => (user_id, session_key),
+        _ => {
+            return Err(AppError::BackendInvalidResponse(anyhow!(
+                "invalid response type"
+            )))
+        }
+    };
+
+    // update accounts
+    // (or call v0.account.list?)
+    accs.rpc_session_keys.insert(user_id.clone(), key);
+    if accs.owner_id.is_none() {
+        accs.owner_id = Some(user_id.clone());
+    }
+    session
+        .insert("accounts", accs)
+        .map_err(|err| AppError::BackendInvalidResponse(anyhow!(err)))?;
+
+    Ok((
+        StatusCode::OK,
+        [
+            (header::CACHE_CONTROL, "no-cache"),
+            (header::CONTENT_TYPE, "application/json"),
+        ],
+        json!({ "user_id": user_id }).to_string(),
+    ))
+}
+
+// TODO: signouts (invalidate sessions on minichotan and delete tokens on binchotan-backend)
 
 async fn timeline(
     Query(params): Query<HashMap<String, String>>,
@@ -64,14 +127,7 @@ async fn timeline(
             Err(AppError::OtherInternal)?
         }
     };
-    Ok((
-        StatusCode::OK,
-        [
-            (header::CACHE_CONTROL, "no-cache"),
-            (header::CONTENT_TYPE, "application/json"),
-        ],
-        Json(res),
-    ))
+    Ok(ok_nocache_json(res))
 }
 
 async fn accounts(session: ReadableSession) -> Result<impl IntoResponse, AppError> {
@@ -93,7 +149,7 @@ async fn accounts(session: ReadableSession) -> Result<impl IntoResponse, AppErro
         RpcObject::Result(result) => result,
         RpcObject::Error(err) => Err(AppError::OtherInternal)?,
     };
-    Ok((StatusCode::OK, Json(res)))
+    Ok(ok_nocache_json(res))
 }
 
 async fn userinfo(
@@ -122,14 +178,7 @@ async fn userinfo(
             Err(AppError::OtherInternal)?
         }
     };
-    Ok((
-        StatusCode::OK,
-        [
-            (header::CACHE_CONTROL, "no-cache"),
-            (header::CONTENT_TYPE, "application/json"),
-        ],
-        Json(res),
-    ))
+    Ok(ok_nocache_json(res))
 }
 
 async fn get_user() {
@@ -146,6 +195,17 @@ fn prepare_rpc() -> Result<(UnixStream, String), AppError> {
     let id = uuid::Uuid::new_v4().to_string();
 
     Ok((stream, id))
+}
+
+fn ok_nocache_json(resp: RpcResponseResult) -> impl IntoResponse {
+    (
+        StatusCode::OK,
+        [
+            (header::CACHE_CONTROL, "no-cache"),
+            (header::CONTENT_TYPE, "application/json"),
+        ],
+        Json(resp),
+    )
 }
 
 #[tokio::main]
@@ -186,6 +246,7 @@ async fn main() -> Result<(), AppError> {
 
     let app = Router::new()
         .fallback(frontend_service)
+        .route("/accounts/add", get(add_account))
         .route("/timeline", get(timeline))
         .route("/accounts", get(accounts))
         .route("/userinfo", get(userinfo))

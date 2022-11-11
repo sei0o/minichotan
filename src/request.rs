@@ -24,6 +24,7 @@ impl RpcRequest {
         stream.read_to_string(&mut resp)?;
         debug!("Received response: {}", resp);
 
-        serde_json::from_str(&resp).map_err(AppError::BackendInvalidResponse)
+        serde_json::from_str(&resp)
+            .map_err(|x| AppError::BackendInvalidResponse(anyhow::anyhow!(x)))
     }
 }
