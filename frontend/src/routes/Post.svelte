@@ -17,53 +17,69 @@
   export let medium = {};
 
   let json: string = "";
-  $: json = JSON.stringify(post, null, "  ");
 
   let opened = false;
-  let fullRawText = post.text;
-  $: fullRawText = retweet ? retweetSrc.text : post.text;
-  let text = "";
+  let text: string;
+  let originalText: string;
+  let escapedText = "";
   $: {
-    const t = fullRawText
+    const t = originalText
       .replace(/https:\/\/t.co\/\w+(\s|$)/g, "")
       .replace(/^RT @([^:])+: /g, "")
       .replace(/\n+$/g, "");
     const doc = new DOMParser().parseFromString(t, "text/html");
-    text = doc.documentElement.textContent || "";
+    escapedText = doc.documentElement.textContent || "";
   }
-  let author = users[post.author_id];
+  let author = {}; 
   let links: string[] = [];
   let mediaKeys: string[] = [];
 
   let retweet: boolean, retweetSrc, retweetSrcAuthor;
   let quote: boolean, quoteSrc, quoteSrcAuthor;
-  $: retweet = retweetSrc !== undefined;
-  $: quote = quoteSrc !== undefined;
 
-  if (post.referenced_tweets) {
-    for (const ref of post.referenced_tweets) {
-      if (ref.type === "retweeted") {
-        retweetSrc = refTweets[ref.id];
-        retweetSrcAuthor = users[retweetSrc.author_id];
-        break;
-      }
-
-      if (ref.type === "quoted") {
-        quoteSrc = refTweets[ref.id];
-        quoteSrcAuthor = users[quoteSrc.author_id];
-      }
-    }
-  }
+  $: originalText = retweet ? retweetSrc.text : text;
 
   $: {
     post = post;
+
+    text = post.text;
+    json = JSON.stringify(post, null, "  ");
+    author = users[post.author_id];
+
     if (post.entities && post.entities.urls) {
       links = post.entities.urls.filter(link => !link.media_key || medium[link.media_key].type != "photo");
+    } else {
+      links = [];
     }
+
     if (post.attachments) {
       mediaKeys = post.attachments.media_keys;
     } else {
       mediaKeys = [];
+    }
+
+    if (post.referenced_tweets) {
+      for (const ref of post.referenced_tweets) {
+        if (ref.type === "retweeted") {
+          retweet = true;
+          retweetSrc = refTweets[ref.id];
+          retweetSrcAuthor = users[retweetSrc.author_id];
+          break;
+        } else {
+          retweet = false;
+        }
+
+        if (ref.type === "quoted") {
+          quote = true;
+          quoteSrc = refTweets[ref.id];
+          quoteSrcAuthor = users[quoteSrc.author_id];
+        } else {
+          quote = false;
+        }
+      }
+    } else {
+      retweet = false;
+      quote = false;
     }
   }
 
@@ -77,7 +93,7 @@
     {#if quote}
       {quoteSrc.text}
     {/if}
-    {text}<br>
+    {escapedText}<br>
   </span>
   <div class="links">
     {#each links as link}

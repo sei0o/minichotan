@@ -3,7 +3,7 @@
 </script>
 <script type="ts">
   import { onMount } from "svelte";
-import { object_without_properties } from "svelte/internal";
+import { identity, object_without_properties } from "svelte/internal";
   import Post from './Post.svelte';
 
   let posts: any[string] = {};
@@ -75,8 +75,14 @@ import { object_without_properties } from "svelte/internal";
   <nav>
     <ul>
       <li>minichotan</li>
-        {#each readyUsers as u}
-          <li><a href="#" on:click={setUser(u[0])}>{u[1]}</a></li>
+        {#each readyUsers as [id, name]}
+          <li>
+            {#if currentUserId == id}
+              {name}
+            {:else}
+              <a href="#" on:click={setUser(id)}>{name}</a>
+            {/if}
+          </li>
         {/each}
       <li><a href="#" on:click={addUser}>Add Account</a></li>
       <li><a href="/about">about</a></li>
