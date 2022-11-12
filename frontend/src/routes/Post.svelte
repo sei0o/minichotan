@@ -39,6 +39,12 @@
 
   $: originalText = retweet ? retweetSrc.text : text;
 
+  let originalDate, formattedDate;
+  $: {
+    const d = new Date(originalDate);
+    formattedDate = d.toLocaleString();
+  }
+
   $: {
     post = post;
 
@@ -81,6 +87,8 @@
       retweet = false;
       quote = false;
     }
+
+    originalDate = retweet ? retweetSrc.created_at : post.created_at;
   }
 
   function toggle() {
@@ -126,6 +134,7 @@
         <span class="author">@{author.username}</span>
       {/if}
     {/if}
+    <span class="date">{formattedDate}</span>
     <span class="debug">{json}</span>
   </div>
 </div>
@@ -153,10 +162,18 @@
 
   .post.open .detail {
     display: block;
+    position: relative;
   }
 
   .author {
     font-size: 0.8rem;
+  }
+
+  .date {
+    font-size: 0.8rem;
+    position: absolute;
+    right: 0;
+    left: auto;
   }
 
   .link {
