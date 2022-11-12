@@ -313,14 +313,7 @@ async fn main() -> Result<(), AppError> {
         .route("/api/user/", get(get_user))
         .route("/api/post/", get(get_post))
         .layer(Extension(pool))
-        .layer(session_layer)
-        .layer(
-            ServiceBuilder::new().layer(
-                CorsLayer::new()
-                    .allow_methods([Method::GET, Method::POST])
-                    .allow_origin(Any),
-            ),
-        );
+        .layer(session_layer);
 
     axum::Server::bind(&config.addr)
         .serve(app.into_make_service())
