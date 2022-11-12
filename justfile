@@ -7,4 +7,4 @@ backend:
   cargo r
 
 frontend:
-  cd frontend; npm exec -- vite dev --port $FRONTEND_SERVER_PORT --strictPort
+  cd frontend; npm exec -- vite dev --host $FRONTEND_SERVER_HOST --port $FRONTEND_SERVER_PORT --strictPort

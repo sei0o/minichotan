@@ -1,4 +1,4 @@
 {$PROXY_LISTEN_ADDRESS} {
   reverse_proxy /api/* {$API_SERVER_ADDRESS}
-  reverse_proxy /* {$FRONTEND_SERVER_ADDRESS}
+  reverse_proxy /* {$FRONTEND_SERVER_HOST}:{$FRONTEND_SERVER_PORT}
 }
