@@ -102,13 +102,53 @@ async fn timeline(
         .key_for(user_id)
         .ok_or(AppError::SessionNotFound(user_id.into()))?;
 
+    let expansions = vec![
+        "author_id",
+        "referenced_tweets.id",
+        "referenced_tweets.id.author_id",
+        "attachments.media_keys",
+    ];
+    let media_fields = vec![
+        "media_key",
+        "type",
+        "preview_image_url",
+        "height",
+        "width",
+        "url",
+        "alt_text",
+    ];
+    let tweet_fields = vec![
+        "attachments",
+        "author_id",
+        //"context_annotations",
+        "conversation_id",
+        "created_at",
+        "entities",
+        "geo",
+        "id",
+        "in_reply_to_user_id",
+        "lang",
+        "public_metrics",
+        // Ads-related fields
+        //"non_public_metrics",
+        //"organic_metrics",
+        //"promoted_metrics",
+        "possibly_sensitive",
+        "referenced_tweets",
+        "reply_settings",
+        "source",
+        "text",
+        "withheld",
+    ];
     let payload = json!({
         "jsonrpc": JSONRPC_VERSION,
         "id": id,
         "params": {
             "session_key": key,
             "api_params": {
-                "expansions": "author_id,referenced_tweets.id,referenced_tweets.id.author_id",
+                "expansions": expansions.join(","),
+                "media.fields": media_fields.join(","),
+                "tweet.fields": tweet_fields.join(","),
             },
         },
         "method": "v0.home_timeline",

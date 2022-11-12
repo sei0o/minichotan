@@ -3,13 +3,15 @@
 </script>
 <script type="ts">
   import { onMount } from "svelte";
+import { object_without_properties } from "svelte/internal";
   import Post from './Post.svelte';
 
-  let posts = {};
+  let posts: any[string] = {};
   let ownerId: string;
   let userIds: string[] = [];
-  let users = {};
+  let users: any[string] = {};
   let includedUsers = {};
+  let includedMedium = {};
   let includedTweets = {};
   let currentUserId: string|null = null;
 
@@ -47,8 +49,12 @@
       ob[u.id] = u;
       return ob;
     }, includedUsers);
-    includedTweets = json.includes.tweets.reduce((ob, u) => {
-      ob[u.id] = u;
+    includedMedium = json.includes.media.reduce((ob, med) => {
+      ob[med.media_key] = med;
+      return ob;
+    }, includedMedium);
+    includedTweets = json.includes.tweets.reduce((ob, tw) => {
+      ob[tw.id] = tw;
       return ob;
     }, includedTweets);
     console.log(json);
@@ -62,17 +68,15 @@
     userIds = userIds;
   }
 
-  function getUsername(userId: string) {
-    return (users[userId] ? '@' + users[userId].username : userId);
-  }
+  $: readyUsers = userIds.map(id => users[id] ? [id, '@' + users[id].username] : null).filter(id => id != null)
 </script>
 
 <header>
   <nav>
     <ul>
       <li>minichotan</li>
-        {#each userIds as id}
-          <li><a href="#" on:click={setUser(id)}>{getUsername(id)}</a></li>
+        {#each readyUsers as u}
+          <li><a href="#" on:click={setUser(u[0])}>{u[1]}</a></li>
         {/each}
       <li><a href="#" on:click={addUser}>Add Account</a></li>
       <li><a href="/about">about</a></li>
@@ -83,7 +87,7 @@
 <main>
   {#if currentUserId && posts[currentUserId]}
     {#each posts[currentUserId] as post}
-      <Post {post} users={includedUsers} refTweets={includedTweets} />
+      <Post {post} users={includedUsers} refTweets={includedTweets} medium={includedMedium} />
     {/each}
   {/if}
 </main>
