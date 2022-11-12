@@ -179,7 +179,9 @@
 
   .post.open .photo {
     height: auto;
+    width: auto;
     max-height: 70vh;
+    max-width: 100%;
     object-fit: inherit;
   }
 </style>

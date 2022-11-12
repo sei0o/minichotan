@@ -71,38 +71,45 @@ import { identity, object_without_properties } from "svelte/internal";
   $: readyUsers = userIds.map(id => users[id] ? [id, '@' + users[id].username] : null).filter(id => id != null)
 </script>
 
-<header>
-  <nav>
-    <ul>
-      <li>minichotan</li>
-        {#each readyUsers as [id, name]}
-          <li>
-            {#if currentUserId == id}
-              {name}
-            {:else}
-              <a href="#" on:click={setUser(id)}>{name}</a>
-            {/if}
-          </li>
-        {/each}
-      <li><a href="#" on:click={addUser}>Add Account</a></li>
-      <li><a href="/about">about</a></li>
-    </ul>
-  </nav>
-</header>
+<div id="container">
+  <header>
+    <nav>
+      <ul>
+        <li>minichotan</li>
+          {#each readyUsers as [id, name]}
+            <li>
+              {#if currentUserId == id}
+                {name}
+              {:else}
+                <a href="#" on:click={setUser(id)}>{name}</a>
+              {/if}
+            </li>
+          {/each}
+        <li><a href="#" on:click={addUser}>Add Account</a></li>
+        <li><a href="/about">about</a></li>
+      </ul>
+    </nav>
+  </header>
 
-<main>
-  {#if currentUserId && posts[currentUserId]}
-    {#each posts[currentUserId] as post}
-      <Post {post} users={includedUsers} refTweets={includedTweets} medium={includedMedium} />
-    {/each}
-  {/if}
-</main>
+  <main>
+    {#if currentUserId && posts[currentUserId]}
+      {#each posts[currentUserId] as post}
+        <Post {post} users={includedUsers} refTweets={includedTweets} medium={includedMedium} />
+      {/each}
+    {/if}
+  </main>
+</div>
 
 <style>
 body {
   margin: 0 !important;
   padding: 0;
   border: none;
+}
+
+#container {
+  margin: 0 auto;
+  max-width: 40rem;
 }
 
 header {
