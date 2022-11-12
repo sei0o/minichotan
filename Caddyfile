@@ -1,4 +1,4 @@
-localhost {
-  reverse_proxy /api/* localhost:3939
-  reverse_proxy /* localhost:5173
+{$PROXY_LISTEN_ADDRESS} {
+  reverse_proxy /api/* {$API_SERVER_ADDRESS}
+  reverse_proxy /* {$FRONTEND_SERVER_ADDRESS}
 }

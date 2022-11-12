@@ -1,10 +1,8 @@
-use std::env;
-
+use crate::response::RpcResponseError;
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;
+use std::env;
 use thiserror::Error;
-
-use crate::response::{RpcResponse, RpcResponseError};
 
 #[derive(Debug, Error)]
 pub enum AppError {

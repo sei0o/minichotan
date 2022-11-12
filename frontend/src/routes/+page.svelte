@@ -18,7 +18,7 @@
   });
 
   async function listUser() {
-    const acctResp = await fetch("//localhost/api/accounts");
+    const acctResp = await fetch("/api/accounts");
     const json = await acctResp.json();
     ownerId = json.owner_id;
     userIds = json.user_ids;
@@ -29,7 +29,7 @@
   }
 
   async function addUser() {
-    const resp = await fetch(`//localhost/api/accounts/add`);
+    const resp = await fetch(`/api/accounts/add`);
     const json = (await resp.json()).body;
     console.log(json);
 
@@ -40,7 +40,7 @@
   async function setUser(userId: string) {
     currentUserId = userId;
 
-    const resp = await fetch(`//localhost/api/timeline?user_id=${userId}`);
+    const resp = await fetch(`/api/timeline?user_id=${userId}`);
     const json = (await resp.json()).body;
     posts[userId] = json.data;
     includedUsers = json.includes.users.reduce((ob, u) => {
@@ -56,7 +56,7 @@
   }
 
   async function setUserInfo(userId: string) {
-    const resp = await fetch(`//localhost/api/userinfo?user_id=${userId}`);
+    const resp = await fetch(`/api/userinfo?user_id=${userId}`);
     users[userId] = (await resp.json()).body.data;
     users = users;
     userIds = userIds;

@@ -12,7 +12,7 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Result<Self, AppError> {
-        let addr = env::var("SERVER_ADDRESS")?.parse()?;
+        let addr = env::var("API_SERVER_ADDRESS")?.parse()?;
         let sock_path = env::var("SOCKET_PATH")?.into();
         let database_url = env::var("DATABASE_URL")?.into();
         let session_secret = env::var("SESSION_SECRET")?.into();
